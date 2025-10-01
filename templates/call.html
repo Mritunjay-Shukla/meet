@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script src='https://kit.fontawesome.com/a076d05399.js' crossorigin='anonymous'></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css" integrity="sha512-2SwdPD6INVrV/lHTZbO2nodKhrnDdJK9/kg2XD1r9uGqPo1cUbujc+IYdlYdEErWNu69gVcYgdxlmVmzTWnetw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+<title>Screen Share Room</title>
+
+<style>
+/* ---------- Neat CSS for host/guest ---------- */
+* { 
+    box-sizing: border-box; 
+    margin: 0; 
+    padding: 0; 
+    font-family: Arial, sans-serif; 
+}
+body { 
+    background-color: #f5f6fa; 
+    display: flex; 
+    flex-direction: column; 
+    align-items: center; 
+    justify-content: center;
+    min-height: 100vh;
+    padding: 20px; 
+}
+
+.main-container{
+    width: 100%;
+    height: 100%;
+    text-align: center;
+}
+
+h2 { 
+    margin-bottom: 15px; 
+    color: #2f3640; 
+}
+
+#shareBtn {
+    background-color: #4cd137;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    font-size: 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    margin-bottom: 15px;
+    transition: background 0.3s;
+}
+#shareBtn:hover { background-color: #44bd32; }
+
+.video-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    justify-content: center;
+    width: 100%;
+    max-width: 1000px;
+    margin: auto;
+}
+
+video {
+    background-color: black;
+    width: 100%;
+    height: auto;
+    border-radius: 12px;
+    box-shadow: 0px 4px 15px rgba(0,0,0,0.2);
+    z-index: -1;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    video { width: 100%; }
+}
+
+.waiting-message {
+    font-size: 18px;
+    color: #718093;
+    margin-bottom: 15px;
+}
+
+mark{
+    background-color: red;
+    color: white;
+    font-size: xx-large;
+    font-weight: bold;
+    animation: blink 1s infinite;
+}
+
+#fullscreenBtn{
+    position: absolute; 
+    bottom: 10px; 
+    right: 10px; 
+    background: rgba(190, 0, 0, 0.877); 
+    color: white; 
+    border: none; 
+    padding: 6px 10px; 
+    border-radius: 5px; cursor: pointer;
+}
+
+#exitFullscreenBtn{
+    display: none; 
+    position: absolute; 
+    top: 10px; 
+    right: 10px; 
+    background: rgba(190, 0, 0, 0.877); 
+    color: white; 
+    border: none; 
+    padding: 6px 10px; 
+    border-radius: 5px; 
+    cursor: pointer;
+}
+
+@keyframes blink {
+    from{
+        color: red;
+    }
+    to{
+        color: white;
+    }
+}
+
+.message-box-container{
+    position: fixed;
+    right: 10px;
+    bottom: 20px;
+    width: 250px;
+    background-color: white;
+    box-shadow: 0px 0px 20px whitesmoke;
+    border-radius: 20px;
+    z-index: 1;
+}
+.message-box-container .message-box{
+    width: 100%;
+    height: 350px;
+    position: relative;
+    overflow-y: scroll;
+    display: none;
+}
+.msg-inp{
+    width: 250px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: fixed;
+    bottom: 37px;
+}
+.msg-inp input{
+    width: 80%;
+    border: 1px solid rgb(7, 148, 204);
+    outline: none;
+    border-radius: 10px;
+    box-shadow: inset 1px 1px 10px whitesmoke;
+    padding: 6px 4px;
+}
+.msgbtn{
+    background-color: rgb(7, 148, 204);
+    color: white;
+    font-size: 14px;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 20px;
+    cursor: pointer;
+}
+</style>
+
+</head>
+<body>
+<div class="main-container">
+
+    <div class="message-box-container">
+        <div class="message-box">
+            <div class="msg-inp">
+                <input type="text" placeholder="type msg here..">
+                <i class="fa fa-paper-plane" style="font-size:28px;color:rgb(7, 148, 204)"></i>
+            </div>
+        </div>
+        <div class="msgbtn" onclick="toggleMsgBtn()">
+            <span>Start Chat</span>
+            <i class='fas fa-comments'></i>
+        </div>
+
+        <script>
+            let msgShow = false;
+            toggleMsgBtn=()=>{
+                if(msgShow){
+                    document.querySelector('.message-box').style.display='none'
+                }else{
+                    document.querySelector('.message-box').style.display='block'
+                }
+                msgShow=!msgShow
+            }
+        </script>
+    </div>
+
+    <h2>Room: {{ room_id }}</h2>
+
+    {% if is_host %}
+    <button id="shareBtn">Share Screen + Audio</button>
+    {% else %}
+    <div class="waiting-message">Waiting for host to share screen...</div>
+    {% endif %}
+
+    <div class="video-container">
+        {% if is_host %}
+        <video id="localVideo" autoplay playsinline muted></video>
+        {% else %}
+        <div id="videoWrapper" style="position: relative; display: inline-block;">
+            <video id="remoteVideo" autoplay playsinline muted></video>
+            <button id="fullscreenBtn">Fullscreen</button>
+            <button id="exitFullscreenBtn">Exit</button>
+        </div>
+        {% endif %}
+
+    </div>
+</div>
+<script>
+const roomId = "{{ room_id }}";
+const isHost = {{ is_host|yesno:"true,false" }};
+// let ws = new WebSocket("ws://" + window.location.host + "/ws/call/" + roomId + "/");
+let ws = new WebSocket("ws://" + window.location.host + "/ws/call/" + roomId + "/?host=" + (isHost ? "true" : "false"));
+
+let localVideo = document.getElementById("localVideo");
+let peers = {};   // channel -> RTCPeerConnection
+let currentStream = null;
+
+//full screen button feature
+if (!isHost) {
+    const remoteVideo = document.getElementById("remoteVideo");
+    const fullscreenBtn = document.getElementById("fullscreenBtn");
+    const exitFullscreenBtn = document.getElementById("exitFullscreenBtn");
+
+    fullscreenBtn.onclick = () => {
+        if (remoteVideo.requestFullscreen) {
+            remoteVideo.requestFullscreen();
+        } else if (remoteVideo.webkitRequestFullscreen) {
+            remoteVideo.webkitRequestFullscreen();
+        } else if (remoteVideo.msRequestFullscreen) {
+            remoteVideo.msRequestFullscreen();
+        }
+    };
+
+    exitFullscreenBtn.onclick = () => {
+        if (document.exitFullscreen) {
+            document.exitFullscreen();
+        } else if (document.webkitExitFullscreen) {
+            document.webkitExitFullscreen();
+        } else if (document.msExitFullscreen) {
+            document.msExitFullscreen();
+        }
+    };
+
+    // Toggle Exit button based on fullscreen state
+    document.addEventListener('fullscreenchange', () => {
+        if (document.fullscreenElement) {
+            exitFullscreenBtn.style.display = 'block';
+        } else {
+            exitFullscreenBtn.style.display = 'none';
+        }
+    });
+}
+
+
+
+// ---------- Chat Logic ----------
+const msgInput = document.querySelector('.msg-inp input');
+const msgBox = document.querySelector('.message-box');
+const sendBtn = document.querySelector('.fa-paper-plane');
+
+sendBtn.onclick = () => {
+    let text = msgInput.value.trim();
+    if (text.length > 0) {
+        ws.send(JSON.stringify({
+            type: "chat",
+            message: text,
+            is_host: isHost
+        }));
+
+        // Show own message instantly (host and guest)
+        let bubble = document.createElement("div");
+        bubble.style.padding = "6px";
+        bubble.style.margin = "4px";
+        bubble.style.background = "#dcdde1";
+        bubble.style.borderRadius = "10px";
+        bubble.innerText = "Me: " + text;
+        msgBox.appendChild(bubble);
+        msgInput.value = "";
+        msgBox.scrollTop = msgBox.scrollHeight;
+    }
+};
+
+// ---------- WebRTC + Signaling ----------
+function createPeer(target) {
+    const pc = new RTCPeerConnection();
+
+    if (!isHost) {
+        pc.ontrack = (event) => {
+            let remoteVideo = document.getElementById("remoteVideo");
+            remoteVideo.srcObject = event.streams[0];
+        };
+    }
+
+    pc.onicecandidate = (event) => {
+        if (event.candidate) {
+            ws.send(JSON.stringify({ 
+                "candidate": event.candidate,
+                "target": target 
+            }));
+        }
+    };
+
+    if (isHost && currentStream) {
+        currentStream.getTracks().forEach(track => pc.addTrack(track, currentStream));
+    }
+
+    peers[target] = pc;
+    return pc;
+}
+
+// Host share
+if (isHost) {
+    document.getElementById("shareBtn").onclick = async () => {
+        currentStream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: true });
+        localVideo.srcObject = currentStream;
+        Object.values(peers).forEach(pc => {
+            currentStream.getTracks().forEach(track => pc.addTrack(track, currentStream));
+        });
+    };
+}
+
+ws.onmessage = async (e) => {
+    let data = JSON.parse(e.data);
+
+    // ---- Chat messages ----
+    if (data.type === "chat") {
+        let bubble = document.createElement("div");
+        bubble.style.padding = "6px";
+        bubble.style.margin = "4px";
+
+        if (data.sender === "host") {
+            bubble.style.background = "#7f8fa6";
+            bubble.style.color = "white";
+            bubble.innerText = "Host: " + data.message;
+        } else {
+            bubble.style.background = "#00a8ff";
+            bubble.style.color = "white";
+            bubble.innerText = "Guest: " + data.message;
+        }
+
+        msgBox.appendChild(bubble);
+        msgBox.scrollTop = msgBox.scrollHeight;
+        return;
+    }
+
+    // ---- WebRTC ----
+    if (isHost && data.type === "new_guest") {
+        let guest = data.channel;
+        let pc = createPeer(guest);
+
+        let offer = await pc.createOffer();
+        await pc.setLocalDescription(offer);
+        ws.send(JSON.stringify({ "sdp": pc.localDescription, "target": guest }));
+    }
+
+    if (data.sdp) {
+        let from = data.sender;
+        let pc = peers[from] || createPeer(from);
+
+        if (data.sdp.type === "offer" && !isHost) {
+            await pc.setRemoteDescription(new RTCSessionDescription(data.sdp));
+            let answer = await pc.createAnswer();
+            await pc.setLocalDescription(answer);
+            ws.send(JSON.stringify({ "sdp": pc.localDescription, "target": from }));
+        } else if (data.sdp.type === "answer" && isHost) {
+            await pc.setRemoteDescription(new RTCSessionDescription(data.sdp));
+        }
+    }
+
+    if (data.candidate) {
+        let from = data.sender;
+        let pc = peers[from] || createPeer(from);
+        try {
+            await pc.addIceCandidate(new RTCIceCandidate(data.candidate));
+            document.querySelector('.waiting-message').innerHTML = "<mark>LIVE</mark>";
+        } catch (err) { console.error("ICE error", err); }
+    }
+};
+</script>
+</body>
+</html>

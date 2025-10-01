@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Start Class</title>
+    <style>
+        /* ---------- Neat CSS for host/guest ---------- */
+* { 
+    box-sizing: border-box; 
+    margin: 0; 
+    padding: 0; 
+    font-family: Arial, sans-serif; 
+}
+body { 
+    background-color: #f5f6fa; 
+    display: flex; 
+    flex-direction: column; 
+    align-items: center; 
+    justify-content: center;
+    padding: 20px; 
+    min-height: 90vh;
+}
+
+h2 { 
+    margin-bottom: 15px; 
+    color: #2f3640; 
+}
+
+#shareBtn {
+    background-color: #4cd137;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    font-size: 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    margin-bottom: 15px;
+    transition: background 0.3s;
+}
+#shareBtn:hover { background-color: #44bd32; }
+
+    form{
+        width: 80%;
+        padding: 20px 0px;
+        background-color: white;
+        border-radius: 20px;
+        box-shadow: 0px 0px 20px whitesmoke;
+        margin: auto;
+        text-align: center;
+    }
+    form *{
+        width: 90%;
+        margin-top: 10px;
+    }
+
+    form input{
+        outline: none;
+        border: none;
+        border-radius: 10px;
+        box-shadow: inset 2px 2px whitesmoke;
+        padding: 10px 0px;
+    }
+    </style>
+</head>
+<body>
+
+    <form action="{% url 'meetapp:create_room' %}" method="post">
+        {% csrf_token %}
+        <label for="room_id">Enter Room Name: </label><br>
+        <input type="text" name="room_id" placeholder="Enter Room Name.."><br><br>
+        <button id="shareBtn">Create Room</button>
+    </form>
+    
+</body>
+</html>
