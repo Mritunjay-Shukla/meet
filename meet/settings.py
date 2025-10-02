@@ -26,13 +26,13 @@ SECRET_KEY = 'django-insecure--vc=i20(aor&q_ydow6(s+8ptg*6q=gp=rx@lh8hbcrj2x3igj
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-# ALLOWED_HOSTS = [
-#     "web-production-a103b.up.railway.app",
-#     "127.0.0.1",
-#     "localhost",
-# ]
+ALLOWED_HOSTS = [
+    "meet-565w.onrender.com",
+    "127.0.0.1",
+    "localhost",
+]
 
-ALLOWED_HOSTS = []
+# ALLOWED_HOSTS = []
 
 # Application definition
 
